@@ -17,7 +17,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
 
-    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper) {
+    public UserServiceImpl (UserRepository userRepository, UserMapper userMapper) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
     }
@@ -32,8 +32,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDTO findByUserName(String username) {
-        User user = userRepository.findByUserName (username);
-        return null;
+        User user = userRepository.findByUserName(username);
+        return userMapper.convertToDTO(user);
     }
 
     @Override
@@ -44,11 +44,37 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDTO update(UserDTO dto) {
-        return null;
+
+       //Find current user
+        User user = userRepository.findByUserName(dto.getUserName());
+        //Map updated user dto to entity object
+        User convertedUser = userMapper.convertToEntity(dto);
+        //set id to converted object
+        convertedUser.setId(user.getId());
+        //save updated user
+        userRepository.save(convertedUser);
+
+        return findByUserName(dto.getUserName());
     }
 
     @Override
     public void deleteByUserName(String username) {
+        userRepository.deleteByUserName(username);
 
+    }
+
+    @Override
+    public void delete(String username) {
+        User user = userRepository.findByUserName(username);
+        user.setIsDeleted(true);
+        userRepository.save(user);
+    }
+
+    @Override
+    public List<UserDTO> listAllByRole(String role) {
+
+        List<User> users = userRepository.findAllByRoleDescriptionIgnoreCase(role);
+
+        return users.stream().map(userMapper::convertToDTO).collect(Collectors.toList());
     }
 }
